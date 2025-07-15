@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ./backend  # Aponta para a pasta com o Dockerfile
+    container_name: cadastro_app_backend
+    ports:
+      - "5000:5000"
+    # O volume de código abaixo é ótimo para desenvolvimento local.
+    # Em produção (Easypanel), ele é desnecessário pois o código é copiado pela Dockerfile.
+    # volumes:
+    #   - ./backend:/app
+    #   - ./frontend:/app/frontend
+    environment:
+      # Em produção, defina FLASK_ENV=production no painel do Easypanel
+      - FLASK_ENV=production
+      # A DATABASE_URL será configurada no painel do Easypanel para conectar ao serviço de DB
+      - DATABASE_URL=postgresql://user:password@db:5432/cadastro_db
+    depends_on:
+      - db
+    restart: unless-stopped # Boa prática para produção
+
+  db:
+    image: postgres:13-alpine
+    container_name: cadastro_app_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=cadastro_db
+    # Expor a porta do DB é opcional e pode ser um risco de segurança.
+    # O container 'app' pode se conectar ao 'db' sem expor a porta.
+    # ports:
+    #   - "5432:5432"
+    restart: unless-stopped # Boa prática para produção
+
+volumes:
+  postgres_data:
